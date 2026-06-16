@@ -1,4 +1,4 @@
-module github.com/calbera/go-pyth-client
+module github.com/berachain/go-pyth-client
 
 go 1.24.0
 

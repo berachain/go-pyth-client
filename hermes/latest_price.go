@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"sync"
 
-	"github.com/calbera/go-pyth-client/types"
+	"github.com/berachain/go-pyth-client/types"
 	"golang.org/x/sync/errgroup"
 )
 

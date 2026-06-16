@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/calbera/go-pyth-client/examples/lib"
+	"github.com/berachain/go-pyth-client/examples/lib"
 )
 
 // Results from running these benchmarks tend to follow this pattern:

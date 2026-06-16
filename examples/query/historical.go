@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	client "github.com/calbera/go-pyth-client"
-	"github.com/calbera/go-pyth-client/examples/lib"
+	client "github.com/berachain/go-pyth-client"
+	"github.com/berachain/go-pyth-client/examples/lib"
 )
 
 // Requires a Pyth client to fetch prices from Pyth Benchmarks API. Assumes that all required

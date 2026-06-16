@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/calbera/go-pyth-client/benchmarks"
+	"github.com/berachain/go-pyth-client/benchmarks"
 )
 
 // This file contains test utils that are shared for tests of Benchmarks.

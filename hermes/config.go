@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/calbera/go-pyth-client/types"
+	"github.com/berachain/go-pyth-client/types"
 )
 
 type Config struct {

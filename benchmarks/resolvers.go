@@ -4,7 +4,7 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/calbera/go-pyth-client/bindings/apyth"
+	"github.com/berachain/go-pyth-client/bindings/apyth"
 	"github.com/ethereum/go-ethereum/common"
 )
 

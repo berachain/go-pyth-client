@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/calbera/go-pyth-client/bindings/apyth"
+	"github.com/berachain/go-pyth-client/bindings/apyth"
 )
 
 // GetHistoricalPriceUpdatesSync queries the `v1/updates/price/{timestamp}` endpoint for all price
