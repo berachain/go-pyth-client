@@ -9,7 +9,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/calbera/go-pyth-client/types"
+	"github.com/berachain/go-pyth-client/types"
 	"github.com/ethereum/go-ethereum/common"
 	sse "github.com/r3labs/sse/v2"
 )

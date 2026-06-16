@@ -7,8 +7,8 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/hashicorp/go-retryablehttp"
 
-	"github.com/calbera/go-pyth-client/bindings/apyth"
-	"github.com/calbera/go-pyth-client/types"
+	"github.com/berachain/go-pyth-client/bindings/apyth"
+	"github.com/berachain/go-pyth-client/types"
 )
 
 // Client is a client for the Pyth Hermes API (https://hermes.pyth.network/docs)

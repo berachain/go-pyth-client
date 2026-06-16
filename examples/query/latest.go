@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"math/big"
 
-	client "github.com/calbera/go-pyth-client"
-	"github.com/calbera/go-pyth-client/examples/lib"
-	"github.com/calbera/go-pyth-client/types"
+	client "github.com/berachain/go-pyth-client"
+	"github.com/berachain/go-pyth-client/examples/lib"
+	"github.com/berachain/go-pyth-client/types"
 )
 
 // Requires a Pyth client to fetch prices from Pyth Hermes API. Assumes that all required feeds

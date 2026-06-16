@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/calbera/go-pyth-client/bindings/apyth"
+	"github.com/berachain/go-pyth-client/bindings/apyth"
 )
 
 // Actionable data returned from the `v2/updates/price/latest` endpoint for 1 price feed ID.

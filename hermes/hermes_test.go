@@ -6,7 +6,7 @@ import (
 
 	"log/slog"
 
-	"github.com/calbera/go-pyth-client/hermes"
+	"github.com/berachain/go-pyth-client/hermes"
 )
 
 // This file contains test utils that are shared for tests of Hermes.

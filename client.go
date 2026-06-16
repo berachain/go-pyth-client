@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/calbera/go-pyth-client/benchmarks"
-	"github.com/calbera/go-pyth-client/bindings/apyth"
-	"github.com/calbera/go-pyth-client/hermes"
-	"github.com/calbera/go-pyth-client/types"
+	"github.com/berachain/go-pyth-client/benchmarks"
+	"github.com/berachain/go-pyth-client/bindings/apyth"
+	"github.com/berachain/go-pyth-client/hermes"
+	"github.com/berachain/go-pyth-client/types"
 )
 
 // Benchmarks is the interface of the Benchmarks client.

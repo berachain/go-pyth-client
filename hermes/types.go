@@ -3,7 +3,7 @@ package hermes
 import (
 	"sync"
 
-	"github.com/calbera/go-pyth-client/types"
+	"github.com/berachain/go-pyth-client/types"
 )
 
 // Cached data returned from the `/v2/updates/price/stream` stream with mutex feature.

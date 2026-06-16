@@ -3,8 +3,8 @@ package lib
 import (
 	"math"
 
-	"github.com/calbera/go-pyth-client/bindings/apyth"
-	"github.com/calbera/go-pyth-client/types"
+	"github.com/berachain/go-pyth-client/bindings/apyth"
+	"github.com/berachain/go-pyth-client/types"
 )
 
 // Builds a PriceUpdate for a Pyth oracle result.
