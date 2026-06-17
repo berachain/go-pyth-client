@@ -1,7 +1,6 @@
 package hermes
 
 import (
-	"net/http"
 	"strings"
 	"sync"
 
@@ -40,19 +39,11 @@ func NewClient(cfg *Config, logger retryablehttp.LeveledLogger) (*Client, error)
 		return nil, err
 	}
 
-	// Setup and configure the retryable HTTP client.
-	httpClient := retryablehttp.NewClient()
-	httpClient.HTTPClient.Timeout = cfg.HTTPTimeout
-	httpClient.Logger = logger
-	httpClient.RetryMax = cfg.MaxRetries
-
-	// Inject the API key as an `Authorization: Bearer` header on every request.
-	if cfg.APIKey != "" {
-		base := httpClient.HTTPClient.Transport
-		if base == nil {
-			base = http.DefaultTransport
-		}
-		httpClient.HTTPClient.Transport = &authTransport{apiKey: cfg.APIKey, base: base}
+	// Setup and configure the retryable HTTP client. The upgraded Hermes
+	// endpoints require an API key, so an authenticated client is used.
+	httpClient, err := cfg.NewAuthenticatedClient(logger)
+	if err != nil {
+		return nil, err
 	}
 
 	// Build the ABI of the Pyth contract for (en/de)coding responses.
@@ -74,30 +65,6 @@ func NewClient(cfg *Config, logger retryablehttp.LeveledLogger) (*Client, error)
 		pythABI:        &pythABI,
 		ssePriceCached: ssePrice,
 	}, nil
-}
-
-// authTransport injects an `Authorization: Bearer` header into every request.
-type authTransport struct {
-	apiKey string
-	base   http.RoundTripper
-}
-
-func (t *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	// Clone the request before mutating it, per the http.RoundTripper contract.
-	req = req.Clone(req.Context())
-	req.Header.Set("Authorization", "Bearer "+t.apiKey)
-
-	return t.base.RoundTrip(req)
-}
-
-// authHeaders returns the HTTP headers used to authenticate requests, suitable
-// for clients (such as the SSE client) that do not use the retryable HTTP client.
-func (c *Client) authHeaders() map[string]string {
-	if c.cfg.APIKey == "" {
-		return nil
-	}
-
-	return map[string]string{"Authorization": "Bearer " + c.cfg.APIKey}
 }
 
 // Shutdown gracefully shuts down the Pyth Hermes client.

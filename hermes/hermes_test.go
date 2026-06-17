@@ -8,6 +8,7 @@ import (
 	"log/slog"
 
 	"github.com/berachain/go-pyth-client/hermes"
+	"github.com/berachain/go-pyth-client/httpclient"
 )
 
 // This file contains test utils that are shared for tests of Hermes.
@@ -20,10 +21,12 @@ var testPairs = []string{
 
 var testConfig = hermes.Config{
 	// Offchain parameters
-	APIEndpoint: "https://pyth.dourolabs.app/hermes",
-	APIKey:      os.Getenv("PYTH_API_KEY"),
-	HTTPTimeout: 1 * time.Second,
-	MaxRetries:  2,
+	BaseConfig: httpclient.BaseConfig{
+		APIEndpoint: "https://pyth.dourolabs.app/hermes",
+		APIKey:      os.Getenv("PYTH_API_KEY"),
+		HTTPTimeout: 1 * time.Second,
+		MaxRetries:  2,
+	},
 
 	// Onchain parameters
 	UseMock: true, // Uses the mock Pyth contract rather than the real one.
