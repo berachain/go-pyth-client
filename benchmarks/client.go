@@ -1,6 +1,7 @@
 package benchmarks
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -45,4 +46,15 @@ func NewClient(cfg *Config, logger retryablehttp.LeveledLogger) (*Client, error)
 // Shutdown gracefully shuts down the Pyth Benchmarks client.
 func (c *Client) Shutdown() {
 	c.client.CloseIdleConnections()
+}
+
+// get issues a context-aware GET request, as recommended by the net/http docs
+// (build the request with NewRequestWithContext, then call Client.Do).
+func (c *Client) get(ctx context.Context, url string) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.client.Do(req)
 }
