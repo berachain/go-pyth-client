@@ -8,6 +8,7 @@ on:
 
 env:
   GOPATH: /home/runner/go
+  PYTH_API_KEY: ${{ secrets.PYTH_API_KEY }}
 
 jobs:
   test:
