@@ -25,6 +25,7 @@ const (
 func (c *Client) SubscribePriceStreaming(ctx context.Context, priceFeedIDs []string) {
 	c.subscribeOnce.Do(func() {
 		client := sse.NewClient(c.buildBatchURLStream(priceFeedIDs))
+		client.Headers = c.authHeaders()
 
 		subscribe := func() error {
 			return client.SubscribeRawWithContext(ctx, func(msg *sse.Event) {

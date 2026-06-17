@@ -2,6 +2,7 @@ package hermes_test
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"log/slog"
@@ -19,7 +20,8 @@ var testPairs = []string{
 
 var testConfig = hermes.Config{
 	// Offchain parameters
-	APIEndpoint: "https://hermes.pyth.network",
+	APIEndpoint: "https://pyth.dourolabs.app/hermes",
+	APIKey:      os.Getenv("PYTH_API_KEY"),
 	HTTPTimeout: 1 * time.Second,
 	MaxRetries:  2,
 

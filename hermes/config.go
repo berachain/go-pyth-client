@@ -10,6 +10,7 @@ import (
 type Config struct {
 	// Offchain parameters
 	APIEndpoint string
+	APIKey      string // API key sent as `Authorization: Bearer <APIKey>`.
 	HTTPTimeout time.Duration
 	MaxRetries  int
 
@@ -21,6 +22,10 @@ func (c *Config) Validate() error {
 	_, err := url.Parse(c.APIEndpoint)
 	if err != nil {
 		return err
+	}
+
+	if c.APIKey == "" {
+		return types.ErrMissingAPIKey
 	}
 
 	if c.HTTPTimeout <= 0 {
