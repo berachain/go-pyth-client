@@ -90,6 +90,7 @@ func (c *Client) buildBatchURL(apiName string, priceFeedIDs []string) string {
 	// Batch the price feed IDs into a single query string.
 	urlComponents := make([]string, len(priceFeedIDs)+2)
 	urlComponents[0] = c.cfg.APIEndpoint
+
 	urlComponents[1] = apiName
 	for i, priceFeedID := range priceFeedIDs {
 		urlComponents[i+2] = "ids[]=" + priceFeedID + "&"

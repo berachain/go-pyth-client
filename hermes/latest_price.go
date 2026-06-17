@@ -25,6 +25,7 @@ func (c *Client) GetLatestPriceUpdatesSync(
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	// Parse the response.
 	var priceResp latestPriceResponse
@@ -34,6 +35,7 @@ func (c *Client) GetLatestPriceUpdatesSync(
 
 	latestPriceData := make(map[string]*types.LatestPriceData, len(priceResp.Parsed))
 	err = c.resolveMany(&priceResp, latestPriceData)
+
 	return latestPriceData, err
 }
 
@@ -56,6 +58,7 @@ func (c *Client) GetLatestPriceUpdatesAsync(
 
 	// Fetch the price data results in parallel.
 	g.SetLimit(len(priceFeedIDs))
+
 	for _, priceFeedID := range priceFeedIDs {
 		g.Go(func() error {
 			lpd, err := c.fetchIndividualPriceData(priceFeedID)
@@ -82,6 +85,7 @@ func (c *Client) GetLatestPriceUpdatesAsync(
 			prices[priceFeedID] = lpd.(*types.LatestPriceData)
 		}
 	}
+
 	return prices, nil
 }
 
@@ -89,15 +93,18 @@ func (c *Client) GetLatestPriceUpdatesAsync(
 func (c *Client) fetchIndividualPriceData(feedID string) (*types.LatestPriceData, error) {
 	// Build and fire the individual price request.
 	url := c.cfg.APIEndpoint + "/v2/updates/price/latest?ids[]=" + feedID
+
 	resp, err := c.client.Get(url)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	// Parse the response.
 	var priceResp latestPriceResponse
 	if err = json.NewDecoder(resp.Body).Decode(&priceResp); err != nil {
 		return nil, err
 	}
+
 	return c.resolveOne(&priceResp)
 }

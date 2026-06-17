@@ -69,14 +69,17 @@ func (c *Client) GetCachedLatestPriceUpdates(
 	defer c.ssePriceCached.mu.RUnlock()
 
 	cachedUpdates := make(map[string]*types.LatestPriceData)
+
 	for _, priceFeedID := range priceFeedIDs {
 		priceFeedIDRaw := hex.EncodeToString(common.FromHex(priceFeedID))
 
 		if _, ok := c.ssePriceCached.latestPrice[priceFeedIDRaw]; !ok {
 			return nil, fmt.Errorf("this price feed has not been subscribed to: %s", priceFeedID)
 		}
+
 		cachedUpdates[priceFeedID] = c.ssePriceCached.latestPrice[priceFeedIDRaw]
 	}
+
 	return cachedUpdates, nil
 }
 
@@ -88,6 +91,7 @@ func (c *Client) handleSseEvent(event *sse.Event) {
 		c.logger.Error(
 			"skipping msg, encountered an error when unmarshalling streaming data", "error", err,
 		)
+
 		return
 	}
 
@@ -146,6 +150,7 @@ func (c *Client) subscribeWithRetries(ctx context.Context, subscribe func() erro
 				"encountered an error when subscribing to SSE stream, now retrying...",
 				"error", err, "num_retries", retries,
 			)
+
 			if retries >= maxRetries {
 				panic(fmt.Sprintf("failed to subscribe to SSE stream after %d attempts: %v",
 					retries, err))

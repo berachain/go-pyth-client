@@ -36,24 +36,28 @@ func (c *Client) resolveOne(lpr *latestPriceResponse) (*types.LatestPriceData, e
 	if !pOk {
 		return nil, errors.New("failed to convert price string to big.Int")
 	}
+
 	lpd.PriceFeed.Price.Price = priceVal.Int64()
 
 	confVal, cOk := new(big.Int).SetString(lpr.Parsed[0].Price.Conf, 10)
 	if !cOk {
 		return nil, errors.New("failed to convert conf string to big.Int")
 	}
+
 	lpd.PriceFeed.Price.Conf = confVal.Uint64()
 
 	emaPriceVal, epOk := new(big.Int).SetString(lpr.Parsed[0].EmaPrice.Price, 10)
 	if !epOk {
 		return nil, errors.New("failed to convert ema price string to big.Int")
 	}
+
 	lpd.PriceFeed.EmaPrice.Price = emaPriceVal.Int64()
 
 	emaConfVal, ecOk := new(big.Int).SetString(lpr.Parsed[0].EmaPrice.Conf, 10)
 	if !ecOk {
 		return nil, errors.New("failed to convert ema conf string to big.Int")
 	}
+
 	lpd.PriceFeed.EmaPrice.Conf = emaConfVal.Uint64()
 
 	// Set the update data based on whether the mock is being used or not.
@@ -62,6 +66,7 @@ func (c *Client) resolveOne(lpr *latestPriceResponse) (*types.LatestPriceData, e
 		if err != nil {
 			return nil, err
 		}
+
 		lpd.UpdateData = priceUpdateData
 	} else {
 		lpd.UpdateData = common.FromHex(lpr.Binary.Data[0])
@@ -105,24 +110,28 @@ func (c *Client) resolveMany(lpr *latestPriceResponse, lpds map[string]*types.La
 		if !pOk {
 			return errors.New("failed to convert price string to big.Int")
 		}
+
 		lpd.PriceFeed.Price.Price = priceVal.Int64()
 
 		confVal, cOk := new(big.Int).SetString(pr.Price.Conf, 10)
 		if !cOk {
 			return errors.New("failed to convert conf string to big.Int")
 		}
+
 		lpd.PriceFeed.Price.Conf = confVal.Uint64()
 
 		emaPriceVal, epOk := new(big.Int).SetString(pr.EmaPrice.Price, 10)
 		if !epOk {
 			return errors.New("failed to convert ema price string to big.Int")
 		}
+
 		lpd.PriceFeed.EmaPrice.Price = emaPriceVal.Int64()
 
 		emaConfVal, ecOk := new(big.Int).SetString(pr.EmaPrice.Conf, 10)
 		if !ecOk {
 			return errors.New("failed to convert ema conf string to big.Int")
 		}
+
 		lpd.PriceFeed.EmaPrice.Conf = emaConfVal.Uint64()
 
 		// Set the update data based on whether the mock is being used or not.
@@ -131,6 +140,7 @@ func (c *Client) resolveMany(lpr *latestPriceResponse, lpds map[string]*types.La
 			if err != nil {
 				return err
 			}
+
 			lpd.UpdateData = priceUpdateData
 		} else {
 			lpd.UpdateData = common.FromHex(lpr.Binary.Data[0]) // same for all feeds
@@ -157,5 +167,6 @@ func (c *Client) resolveSsePrice(lpr *latestPriceResponse) error {
 		c.logger.Error("skipping msg encountered an error when unmarshalling streaming data")
 		return err
 	}
+
 	return nil
 }

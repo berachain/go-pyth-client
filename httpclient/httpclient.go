@@ -26,9 +26,11 @@ func (c BaseConfig) Validate() error {
 	if _, err := url.Parse(c.APIEndpoint); err != nil {
 		return err
 	}
+
 	if c.HTTPTimeout <= 0 {
 		return types.ErrInvalidHTTPTimeout
 	}
+
 	if c.MaxRetries < 0 {
 		return types.ErrInvalidMaxRetries
 	}
@@ -51,6 +53,7 @@ func New(cfg BaseConfig, logger retryablehttp.LeveledLogger) *http.Client {
 		if base == nil {
 			base = http.DefaultTransport
 		}
+
 		httpClient.HTTPClient.Transport = &authTransport{apiKey: cfg.APIKey, base: base}
 	}
 
