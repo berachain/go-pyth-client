@@ -47,7 +47,7 @@ func NewClient(cfg *Config, logger retryablehttp.LeveledLogger) (*Client, error)
 	}
 
 	// Build the retryable HTTP client
-	httpClient := httpclient.NewClient(cfg.BaseConfig, logger)
+	httpClient := httpclient.New(cfg.BaseConfig, logger)
 
 	// Build the ABI of the Pyth contract for (en/de)coding responses.
 	var pythABI abi.ABI

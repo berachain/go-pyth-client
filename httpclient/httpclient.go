@@ -36,11 +36,11 @@ func (c BaseConfig) Validate() error {
 	return nil
 }
 
-// NewClient builds an *http.Client from cfg. It is backed by a retryablehttp
+// New builds an *http.Client from cfg. It is backed by a retryablehttp
 // client, so the returned standard client transparently retries per cfg.MaxRetries.
 // When cfg.APIKey is set, every request is decorated with an
 // `Authorization: Bearer <APIKey>` header.
-func NewClient(cfg BaseConfig, logger retryablehttp.LeveledLogger) *http.Client {
+func New(cfg BaseConfig, logger retryablehttp.LeveledLogger) *http.Client {
 	httpClient := retryablehttp.NewClient()
 	httpClient.HTTPClient.Timeout = cfg.HTTPTimeout
 	httpClient.Logger = logger

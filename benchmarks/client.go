@@ -33,7 +33,7 @@ func NewClient(cfg *Config, logger retryablehttp.LeveledLogger) (*Client, error)
 	}
 
 	// Build the retryable HTTP client
-	httpClient := httpclient.NewClient(*cfg, logger)
+	httpClient := httpclient.New(*cfg, logger)
 
 	return &Client{
 		cfg:    cfg,
