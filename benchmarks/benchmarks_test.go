@@ -2,6 +2,7 @@ package benchmarks_test
 
 import (
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/berachain/go-pyth-client/benchmarks"
@@ -18,6 +19,7 @@ var (
 
 	testConfig = benchmarks.Config{
 		APIEndpoint: "https://benchmarks.pyth.network",
+		APIKey:      os.Getenv("PYTH_API_KEY"),
 		HTTPTimeout: 1 * time.Second,
 		MaxRetries:  2,
 	}

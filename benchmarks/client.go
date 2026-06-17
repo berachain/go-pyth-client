@@ -1,6 +1,8 @@
 package benchmarks
 
 import (
+	"net/http"
+
 	"github.com/hashicorp/go-retryablehttp"
 )
 
@@ -29,6 +31,15 @@ func NewClient(cfg *Config, logger retryablehttp.LeveledLogger) (*Client, error)
 	httpClient.Logger = logger
 	httpClient.RetryMax = cfg.MaxRetries
 
+	// Inject the API key as an `Authorization: Bearer` header on every request.
+	if cfg.APIKey != "" {
+		base := httpClient.HTTPClient.Transport
+		if base == nil {
+			base = http.DefaultTransport
+		}
+		httpClient.HTTPClient.Transport = &authTransport{apiKey: cfg.APIKey, base: base}
+	}
+
 	return &Client{
 		cfg:    cfg,
 		client: httpClient,
@@ -39,4 +50,18 @@ func NewClient(cfg *Config, logger retryablehttp.LeveledLogger) (*Client, error)
 // Shutdown gracefully shuts down the Pyth Benchmarks client.
 func (c *Client) Shutdown() {
 	c.client.HTTPClient.CloseIdleConnections()
+}
+
+// authTransport injects an `Authorization: Bearer` header into every request.
+type authTransport struct {
+	apiKey string
+	base   http.RoundTripper
+}
+
+func (t *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	// Clone the request before mutating it, per the http.RoundTripper contract.
+	req = req.Clone(req.Context())
+	req.Header.Set("Authorization", "Bearer "+t.apiKey)
+
+	return t.base.RoundTrip(req)
 }
