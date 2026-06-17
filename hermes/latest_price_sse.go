@@ -20,12 +20,22 @@ const (
 	maxRetries     = 3
 )
 
+// authHeaders builds the headers used to authenticate the SSE client, which does
+// not go through the retryable HTTP client. It returns nil when no API key is set.
+func authHeaders(apiKey string) map[string]string {
+	if apiKey == "" {
+		return nil
+	}
+
+	return map[string]string{"Authorization": "Bearer " + apiKey}
+}
+
 // Subscribe price feed from the streaming `v2/updates/price/stream` endpoint. Ensures this only
 // happens once in the scope of runtime. Any further calls to this are unnecessary and no-ops.
 func (c *Client) SubscribePriceStreaming(ctx context.Context, priceFeedIDs []string) {
 	c.subscribeOnce.Do(func() {
 		client := sse.NewClient(c.buildBatchURLStream(priceFeedIDs))
-		client.Headers = c.cfg.AuthHeaders()
+		client.Headers = authHeaders(c.cfg.APIKey)
 
 		subscribe := func() error {
 			return client.SubscribeRawWithContext(ctx, func(msg *sse.Event) {

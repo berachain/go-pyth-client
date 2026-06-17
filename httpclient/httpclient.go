@@ -20,9 +20,8 @@ type BaseConfig struct {
 	MaxRetries  int           // Maximum number of retries per request.
 }
 
-// Validate checks that the shared HTTP configuration is well formed. The API key
-// is not checked here: it is required only when an authenticated client is
-// created (see NewAuthenticatedClient).
+// Validate checks that the shared HTTP configuration is well formed. An API key
+// is required: every Pyth API client authenticates its requests.
 func (c BaseConfig) Validate() error {
 	if _, err := url.Parse(c.APIEndpoint); err != nil {
 		return err
@@ -37,49 +36,26 @@ func (c BaseConfig) Validate() error {
 	return nil
 }
 
-// NewClient builds a retryablehttp.Client with the given timeout, retry count,
-// and logger, without any authentication.
-func NewClient(
-	timeout time.Duration, maxRetries int, logger retryablehttp.LeveledLogger,
-) *retryablehttp.Client {
+// NewClient builds an *http.Client from cfg. It is backed by a retryablehttp
+// client, so the returned standard client transparently retries per cfg.MaxRetries.
+// When cfg.APIKey is set, every request is decorated with an
+// `Authorization: Bearer <APIKey>` header.
+func NewClient(cfg BaseConfig, logger retryablehttp.LeveledLogger) *http.Client {
 	httpClient := retryablehttp.NewClient()
-	httpClient.HTTPClient.Timeout = timeout
+	httpClient.HTTPClient.Timeout = cfg.HTTPTimeout
 	httpClient.Logger = logger
-	httpClient.RetryMax = maxRetries
+	httpClient.RetryMax = cfg.MaxRetries
 
-	return httpClient
-}
-
-// NewAuthenticatedClient builds a retryablehttp.Client from the config, injecting
-// the API key as an `Authorization: Bearer` header on every request. It requires
-// an API key and returns types.ErrMissingAPIKey when one is not configured.
-func (c BaseConfig) NewAuthenticatedClient(
-	logger retryablehttp.LeveledLogger,
-) (*retryablehttp.Client, error) {
-	if c.APIKey == "" {
-		return nil, types.ErrMissingAPIKey
+	if cfg.APIKey != "" {
+		base := httpClient.HTTPClient.Transport
+		if base == nil {
+			base = http.DefaultTransport
+		}
+		httpClient.HTTPClient.Transport = &authTransport{apiKey: cfg.APIKey, base: base}
 	}
 
-	httpClient := NewClient(c.HTTPTimeout, c.MaxRetries, logger)
-
-	base := httpClient.HTTPClient.Transport
-	if base == nil {
-		base = http.DefaultTransport
-	}
-	httpClient.HTTPClient.Transport = &authTransport{apiKey: c.APIKey, base: base}
-
-	return httpClient, nil
-}
-
-// AuthHeaders returns the headers used to authenticate requests, for clients
-// (such as the SSE client) that do not use the retryable HTTP client. It returns
-// nil when no API key is configured.
-func (c BaseConfig) AuthHeaders() map[string]string {
-	if c.APIKey == "" {
-		return nil
-	}
-
-	return map[string]string{"Authorization": "Bearer " + c.APIKey}
+	// Expose the retryable client as a standard *http.Client
+	return httpClient.StandardClient()
 }
 
 // authTransport injects an `Authorization: Bearer` header into every request.

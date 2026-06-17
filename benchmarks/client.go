@@ -1,7 +1,12 @@
 package benchmarks
 
 import (
+	"net/http"
+
 	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/berachain/go-pyth-client/httpclient"
+	"github.com/berachain/go-pyth-client/types"
 )
 
 // Client is a client for the Pyth Benchmarks API (https://benchmarks.pyth.network/docs)
@@ -10,7 +15,7 @@ type Client struct {
 	cfg *Config
 
 	// HTTP client that handles retries with a default retry policy.
-	client *retryablehttp.Client
+	client *http.Client
 
 	// The logger to handle logs
 	logger retryablehttp.LeveledLogger
@@ -22,13 +27,13 @@ func NewClient(cfg *Config, logger retryablehttp.LeveledLogger) (*Client, error)
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
-
-	// The upgraded Benchmarks endpoints require an API key, so an authenticated
-	// client is used.
-	httpClient, err := cfg.NewAuthenticatedClient(logger)
-	if err != nil {
-		return nil, err
+	// Ensure an API key is provided.
+	if cfg.APIKey == "" {
+		return nil, types.ErrMissingAPIKey
 	}
+
+	// Build the retryable HTTP client
+	httpClient := httpclient.NewClient(*cfg, logger)
 
 	return &Client{
 		cfg:    cfg,
@@ -39,5 +44,5 @@ func NewClient(cfg *Config, logger retryablehttp.LeveledLogger) (*Client, error)
 
 // Shutdown gracefully shuts down the Pyth Benchmarks client.
 func (c *Client) Shutdown() {
-	c.client.HTTPClient.CloseIdleConnections()
+	c.client.CloseIdleConnections()
 }

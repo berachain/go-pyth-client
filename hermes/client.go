@@ -1,6 +1,7 @@
 package hermes
 
 import (
+	"net/http"
 	"strings"
 	"sync"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/berachain/go-pyth-client/bindings/apyth"
+	"github.com/berachain/go-pyth-client/httpclient"
 	"github.com/berachain/go-pyth-client/types"
 )
 
@@ -17,7 +19,7 @@ type Client struct {
 	cfg *Config
 
 	// HTTP client that handles retries with a default retry policy.
-	client *retryablehttp.Client
+	client *http.Client
 
 	// The logger to handle logs
 	logger retryablehttp.LeveledLogger
@@ -39,12 +41,13 @@ func NewClient(cfg *Config, logger retryablehttp.LeveledLogger) (*Client, error)
 		return nil, err
 	}
 
-	// Setup and configure the retryable HTTP client. The upgraded Hermes
-	// endpoints require an API key, so an authenticated client is used.
-	httpClient, err := cfg.NewAuthenticatedClient(logger)
-	if err != nil {
-		return nil, err
+	// Ensure an API key is provided.
+	if cfg.APIKey == "" {
+		return nil, types.ErrMissingAPIKey
 	}
+
+	// Build the retryable HTTP client
+	httpClient := httpclient.NewClient(cfg.BaseConfig, logger)
 
 	// Build the ABI of the Pyth contract for (en/de)coding responses.
 	var pythABI abi.ABI
@@ -69,7 +72,7 @@ func NewClient(cfg *Config, logger retryablehttp.LeveledLogger) (*Client, error)
 
 // Shutdown gracefully shuts down the Pyth Hermes client.
 func (c *Client) Shutdown() {
-	c.client.HTTPClient.CloseIdleConnections()
+	c.client.CloseIdleConnections()
 }
 
 // Builds the API endpoint for querying multiple feeds on `v2/updates/price/latest`.
