@@ -2,6 +2,7 @@ package hermes
 
 import (
 	"sync"
+	"time"
 
 	"github.com/berachain/go-pyth-client/types"
 )
@@ -14,6 +15,11 @@ type ssePriceData struct {
 	ready         chan struct{}
 	broadcastOnce sync.Once
 	latestPrice   map[string]*types.LatestPriceData
+
+	// lastEventAt is the wall-clock time the most recent valid update was received from any
+	// feed. It is the stream-liveness (transport-health) signal; per-feed price freshness is
+	// derived from each feed's Pyth publish_time instead. Guarded by mu.
+	lastEventAt time.Time
 }
 
 // JSON formatted price returned from the `v2/updates/price/latest` endpoint.
