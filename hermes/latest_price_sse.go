@@ -36,7 +36,12 @@ func (c *Client) SubscribePriceStreaming(ctx context.Context, priceFeedIDs []str
 		// MaxElapsedTime = 0 means "never give up".
 		reconnect := backoff.NewExponentialBackOff()
 		reconnect.MaxElapsedTime = 0
-		client.ReconnectStrategy = reconnect
+		// Make the strategy context-aware. r3labs runs the reconnect loop via
+		// backoff.RetryNotify, which only exits on a clean shutdown when the backoff carries
+		// the caller's context (otherwise ensureContext wraps it in context.Background(), whose
+		// Done() never fires). With MaxElapsedTime = 0 the loop never stops on its own, so
+		// without this the subscribe goroutine would leak when the caller cancels ctx.
+		client.ReconnectStrategy = backoff.WithContext(reconnect, ctx)
 
 		// These reconnects are the recoverable, expected case (Cloudflare stream resets),
 		// so log them at info. The price-staleness metric is what alerts if reconnects
