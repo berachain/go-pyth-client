@@ -22,11 +22,22 @@ const (
 	maxBackoff     = 30 * time.Second
 )
 
+// authHeaders builds the headers used to authenticate the SSE client, which does
+// not go through the retryable HTTP client. It returns nil when no API key is set.
+func authHeaders(apiKey string) map[string]string {
+	if apiKey == "" {
+		return nil
+	}
+
+	return map[string]string{"Authorization": "Bearer " + apiKey}
+}
+
 // Subscribe price feed from the streaming `v2/updates/price/stream` endpoint. Ensures this only
 // happens once in the scope of runtime. Any further calls to this are unnecessary and no-ops.
 func (c *Client) SubscribePriceStreaming(ctx context.Context, priceFeedIDs []string) {
 	c.subscribeOnce.Do(func() {
 		client := sse.NewClient(c.buildBatchURLStream(priceFeedIDs))
+		client.Headers = authHeaders(c.cfg.APIKey)
 
 		// hermes.pyth.network sits behind Cloudflare, which periodically resets the HTTP/2
 		// stream (~5-12 min, INTERNAL_ERROR) by design while leaving the connection intact.
@@ -82,14 +93,17 @@ func (c *Client) GetCachedLatestPriceUpdates(
 	defer c.ssePriceCached.mu.RUnlock()
 
 	cachedUpdates := make(map[string]*types.LatestPriceData)
+
 	for _, priceFeedID := range priceFeedIDs {
 		priceFeedIDRaw := hex.EncodeToString(common.FromHex(priceFeedID))
 
 		if _, ok := c.ssePriceCached.latestPrice[priceFeedIDRaw]; !ok {
 			return nil, fmt.Errorf("this price feed has not been subscribed to: %s", priceFeedID)
 		}
+
 		cachedUpdates[priceFeedID] = c.ssePriceCached.latestPrice[priceFeedIDRaw]
 	}
+
 	return cachedUpdates, nil
 }
 
@@ -100,6 +114,7 @@ func (c *Client) GetCachedLatestPriceUpdates(
 func (c *Client) LastStreamUpdate() time.Time {
 	c.ssePriceCached.mu.RLock()
 	defer c.ssePriceCached.mu.RUnlock()
+
 	return c.ssePriceCached.lastEventAt
 }
 
@@ -118,6 +133,7 @@ func (c *Client) LastFeedPublishTime(priceFeedID string) time.Time {
 	if !ok || lpd.PriceFeed == nil || lpd.PriceFeed.Price.PublishTime == nil {
 		return time.Time{}
 	}
+
 	return time.Unix(lpd.PriceFeed.Price.PublishTime.Int64(), 0)
 }
 
@@ -129,6 +145,7 @@ func (c *Client) handleSseEvent(event *sse.Event) {
 		c.logger.Error(
 			"skipping msg, encountered an error when unmarshalling streaming data", "error", err,
 		)
+
 		return
 	}
 
@@ -186,6 +203,7 @@ func (c *Client) subscribeWithRetries(ctx context.Context, subscribe func() erro
 		if ctx.Err() != nil {
 			return
 		}
+
 		if err == nil {
 			return
 		}

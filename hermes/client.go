@@ -1,6 +1,8 @@
 package hermes
 
 import (
+	"context"
+	"net/http"
 	"strings"
 	"sync"
 
@@ -8,6 +10,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/berachain/go-pyth-client/bindings/apyth"
+	"github.com/berachain/go-pyth-client/httpclient"
 	"github.com/berachain/go-pyth-client/types"
 )
 
@@ -17,7 +20,7 @@ type Client struct {
 	cfg *Config
 
 	// HTTP client that handles retries with a default retry policy.
-	client *retryablehttp.Client
+	client *http.Client
 
 	// The logger to handle logs
 	logger retryablehttp.LeveledLogger
@@ -39,11 +42,13 @@ func NewClient(cfg *Config, logger retryablehttp.LeveledLogger) (*Client, error)
 		return nil, err
 	}
 
-	// Setup and configure the retryable HTTP client.
-	httpClient := retryablehttp.NewClient()
-	httpClient.HTTPClient.Timeout = cfg.HTTPTimeout
-	httpClient.Logger = logger
-	httpClient.RetryMax = cfg.MaxRetries
+	// Ensure an API key is provided.
+	if cfg.APIKey == "" {
+		return nil, types.ErrMissingAPIKey
+	}
+
+	// Build the retryable HTTP client
+	httpClient := httpclient.New(cfg.BaseConfig, logger)
 
 	// Build the ABI of the Pyth contract for (en/de)coding responses.
 	var pythABI abi.ABI
@@ -59,7 +64,7 @@ func NewClient(cfg *Config, logger retryablehttp.LeveledLogger) (*Client, error)
 
 	return &Client{
 		cfg:            cfg,
-		client:         retryablehttp.NewClient(),
+		client:         httpClient,
 		logger:         logger,
 		pythABI:        &pythABI,
 		ssePriceCached: ssePrice,
@@ -68,7 +73,18 @@ func NewClient(cfg *Config, logger retryablehttp.LeveledLogger) (*Client, error)
 
 // Shutdown gracefully shuts down the Pyth Hermes client.
 func (c *Client) Shutdown() {
-	c.client.HTTPClient.CloseIdleConnections()
+	c.client.CloseIdleConnections()
+}
+
+// get issues a context-aware GET request, as recommended by the net/http docs
+// (build the request with NewRequestWithContext, then call Client.Do).
+func (c *Client) get(ctx context.Context, url string) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.client.Do(req)
 }
 
 // Builds the API endpoint for querying multiple feeds on `v2/updates/price/latest`.
@@ -86,6 +102,7 @@ func (c *Client) buildBatchURL(apiName string, priceFeedIDs []string) string {
 	// Batch the price feed IDs into a single query string.
 	urlComponents := make([]string, len(priceFeedIDs)+2)
 	urlComponents[0] = c.cfg.APIEndpoint
+
 	urlComponents[1] = apiName
 	for i, priceFeedID := range priceFeedIDs {
 		urlComponents[i+2] = "ids[]=" + priceFeedID + "&"
