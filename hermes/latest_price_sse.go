@@ -114,6 +114,7 @@ func (c *Client) GetCachedLatestPriceUpdates(
 func (c *Client) LastStreamUpdate() time.Time {
 	c.ssePriceCached.mu.RLock()
 	defer c.ssePriceCached.mu.RUnlock()
+
 	return c.ssePriceCached.lastEventAt
 }
 
@@ -132,6 +133,7 @@ func (c *Client) LastFeedPublishTime(priceFeedID string) time.Time {
 	if !ok || lpd.PriceFeed == nil || lpd.PriceFeed.Price.PublishTime == nil {
 		return time.Time{}
 	}
+
 	return time.Unix(lpd.PriceFeed.Price.PublishTime.Int64(), 0)
 }
 
@@ -201,6 +203,7 @@ func (c *Client) subscribeWithRetries(ctx context.Context, subscribe func() erro
 		if ctx.Err() != nil {
 			return
 		}
+
 		if err == nil {
 			return
 		}
