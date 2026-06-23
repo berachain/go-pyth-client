@@ -55,6 +55,11 @@ type Hermes interface {
 
 	// Gracefully shuts down the Pyth Hermes client.
 	Shutdown()
+
+	// LastStreamUpdate reports the wall-clock time the SSE stream last delivered a
+	// valid price update. Callers can export time.Since(LastStreamUpdate()) as a
+	// stream-liveness metric.
+	LastStreamUpdate() time.Time
 }
 
 // NewHermes creates a new Pyth Hermes client.
