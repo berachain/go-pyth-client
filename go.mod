@@ -11,6 +11,7 @@ require (
 	github.com/r3labs/sse/v2 v2.10.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/sync v0.17.0
+	gopkg.in/cenkalti/backoff.v1 v1.1.0
 )
 
 require (
@@ -262,7 +263,6 @@ require (
 	golang.org/x/tools/go/expect v0.1.1-deprecated // indirect
 	golang.org/x/tools/go/packages/packagestest v0.1.1-deprecated // indirect
 	google.golang.org/protobuf v1.36.7 // indirect
-	gopkg.in/cenkalti/backoff.v1 v1.1.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

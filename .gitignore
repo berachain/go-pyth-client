@@ -39,3 +39,4 @@ broadcast/
 # testing 
 **/coverage*.txt
 **/lcov.info
+.devcontainer/
