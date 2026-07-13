@@ -15,7 +15,7 @@ import (
 )
 
 func TestSubscribePriceStreaming(t *testing.T) {
-	ctx, pythClient := setUp()
+	ctx, pythClient := setUp(t)
 
 	pythClient.SubscribePriceStreaming(ctx, testPairs)
 
@@ -28,7 +28,7 @@ func TestSubscribePriceStreaming(t *testing.T) {
 }
 
 func TestSubscribePriceStreaming_EmptyRequests(t *testing.T) {
-	ctx, pythClient := setUp()
+	ctx, pythClient := setUp(t)
 
 	pythClient.SubscribePriceStreaming(ctx, testPairs)
 
@@ -40,7 +40,7 @@ func TestSubscribePriceStreaming_EmptyRequests(t *testing.T) {
 }
 
 func TestSubscribePriceStreaming_PriceFeedNotSubscribed(t *testing.T) {
-	ctx, pythClient := setUp()
+	ctx, pythClient := setUp(t)
 
 	pythClient.SubscribePriceStreaming(ctx, testPairs)
 
@@ -83,6 +83,9 @@ func TestSubscribePriceStreaming_StopsOnContextCancel(t *testing.T) {
 
 	cfg := testConfig
 	cfg.APIEndpoint = srv.URL
+	// This test talks to the local SSE server above, which doesn't check auth, so a placeholder
+	// key is enough. Set one explicitly so the test runs without a real key configured.
+	cfg.APIKey = "test-api-key"
 	pythClient, err := hermes.NewClient(&cfg, slog.Default())
 	assert.NoError(t, err)
 
@@ -140,7 +143,7 @@ func goroutineDump() string {
 
 // To run this benchmark only without other tests: `go test -run=^$ -bench=BenchmarkGetCachedLatestPriceUpdates`
 func BenchmarkGetCachedLatestPriceUpdates(b *testing.B) {
-	ctx, pythClient := setUp()
+	ctx, pythClient := setUp(b)
 
 	pythClient.SubscribePriceStreaming(ctx, testPairs)
 

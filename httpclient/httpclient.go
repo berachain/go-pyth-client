@@ -5,6 +5,8 @@ package httpclient
 import (
 	"net/http"
 	"net/url"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -18,6 +20,19 @@ type BaseConfig struct {
 	APIKey      string        // API key sent as `Authorization: Bearer <APIKey>`.
 	HTTPTimeout time.Duration // Timeout applied to each HTTP request.
 	MaxRetries  int           // Maximum number of retries per request.
+}
+
+// APIKey returns the Pyth API key, preferring the contents of the file whose
+// path is given by the PYTH_API_KEY_FILE env var. If that env var is unset or
+// the file cannot be read, it falls back to the PYTH_API_KEY env var.
+func APIKey() string {
+	if path := os.Getenv("PYTH_API_KEY_FILE"); path != "" {
+		if b, err := os.ReadFile(path); err == nil {
+			return strings.TrimSpace(string(b))
+		}
+	}
+
+	return os.Getenv("PYTH_API_KEY")
 }
 
 // Validate checks that the shared HTTP configuration is well formed. An API key

@@ -2,7 +2,7 @@ package hermes_test
 
 import (
 	"context"
-	"os"
+	"testing"
 	"time"
 
 	"log/slog"
@@ -23,7 +23,7 @@ var testConfig = hermes.Config{
 	// Offchain parameters
 	BaseConfig: httpclient.BaseConfig{
 		APIEndpoint: "https://pyth.dourolabs.app/hermes",
-		APIKey:      os.Getenv("PYTH_API_KEY"),
+		APIKey:      httpclient.APIKey(),
 		HTTPTimeout: 1 * time.Second,
 		MaxRetries:  2,
 	},
@@ -32,9 +32,20 @@ var testConfig = hermes.Config{
 	UseMock: true, // Uses the mock Pyth contract rather than the real one.
 }
 
-func setUp() (context.Context, *hermes.Client) {
+func setUp(tb testing.TB) (context.Context, *hermes.Client) {
+	tb.Helper()
+
+	// These tests hit the real Hermes API, which requires a valid key. Skip them when no key is
+	// configured (e.g. local runs without PYTH_API_KEY_FILE / PYTH_API_KEY) rather than panicking.
+	if testConfig.APIKey == "" {
+		tb.Skip("no Pyth API key configured; set PYTH_API_KEY_FILE or PYTH_API_KEY to run this test")
+	}
+
 	// set up Pyth client and subscribe
-	pythClient, _ := hermes.NewClient(&testConfig, slog.Default())
+	pythClient, err := hermes.NewClient(&testConfig, slog.Default())
+	if err != nil {
+		tb.Fatalf("failed to create hermes client: %v", err)
+	}
 
 	return context.Background(), pythClient
 }
