@@ -16,7 +16,8 @@ import (
 
 // BaseConfig holds the offchain HTTP parameters common to all Pyth API clients.
 type BaseConfig struct {
-	APIEndpoint string        // Base URL of the API.
+	APIEndpoint string // Base URL of the API.
+	// #nosec G117
 	APIKey      string        // API key sent as `Authorization: Bearer <APIKey>`.
 	HTTPTimeout time.Duration // Timeout applied to each HTTP request.
 	MaxRetries  int           // Maximum number of retries per request.
@@ -27,8 +28,13 @@ type BaseConfig struct {
 // the file cannot be read, it falls back to the PYTH_API_KEY env var.
 func APIKey() string {
 	if path := os.Getenv("PYTH_API_KEY_FILE"); path != "" {
-		if b, err := os.ReadFile(path); err == nil {
-			return strings.TrimSpace(string(b))
+		root, err := os.OpenRoot(path)
+		if err == nil {
+			defer root.Close()
+
+			if b, err := root.ReadFile("."); err == nil {
+				return strings.TrimSpace(string(b))
+			}
 		}
 	}
 
