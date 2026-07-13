@@ -19,6 +19,6 @@ jobs:
           cache: false
           go-version: "1.24.13"
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-      - uses: n8maninger/action-golang-test@v2
+      - uses: n8maninger/action-golang-test@ef0e294645c281baf752f60bdfb68fc6c7f286cf
         with:
           args: "-timeout=30m"
