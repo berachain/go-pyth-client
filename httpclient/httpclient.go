@@ -26,7 +26,7 @@ func NewSecretWrapper(value string) SecretWrapper {
 
 // String implements fmt.Stringer, returning a redacted placeholder so the
 // secret is never emitted by fmt-based formatting or logging.
-func (sw SecretWrapper) String() string {
+func (SecretWrapper) String() string {
 	return "[REDACTED]"
 }
 

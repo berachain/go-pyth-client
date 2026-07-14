@@ -5,7 +5,10 @@ run:
   allow-parallel-runners: true
 linters:
   default: all
+  enable:
+    - gomodguard_v2
   disable:
+    - gomodguard
     - cyclop
     - depguard
     - dupl
