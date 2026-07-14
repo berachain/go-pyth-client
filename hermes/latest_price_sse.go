@@ -37,7 +37,7 @@ func authHeaders(apiKey string) map[string]string {
 func (c *Client) SubscribePriceStreaming(ctx context.Context, priceFeedIDs []string) {
 	c.subscribeOnce.Do(func() {
 		client := sse.NewClient(c.buildBatchURLStream(priceFeedIDs))
-		client.Headers = authHeaders(c.cfg.APIKey)
+		client.Headers = authHeaders(c.cfg.APIKey.Reveal())
 
 		// hermes.pyth.network sits behind Cloudflare, which periodically resets the HTTP/2
 		// stream (~5-12 min, INTERNAL_ERROR) by design while leaving the connection intact.

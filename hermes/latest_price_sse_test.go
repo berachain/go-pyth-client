@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/berachain/go-pyth-client/hermes"
+	"github.com/berachain/go-pyth-client/httpclient"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,7 +33,7 @@ func TestSubscribePriceStreaming_EmptyRequests(t *testing.T) {
 
 	pythClient.SubscribePriceStreaming(ctx, testPairs)
 
-	var empty_pair = []string{}
+	empty_pair := []string{}
 
 	prices, err := pythClient.GetCachedLatestPriceUpdates(ctx, empty_pair)
 	assert.Error(t, err)
@@ -44,7 +45,7 @@ func TestSubscribePriceStreaming_PriceFeedNotSubscribed(t *testing.T) {
 
 	pythClient.SubscribePriceStreaming(ctx, testPairs)
 
-	var feed = []string{
+	feed := []string{
 		"0xf67b033925d73d43ba4401e00308d9b0f26ab4fbd1250e8b5407b9eaade7e1f4", // HONEY/USD
 	}
 
@@ -85,7 +86,7 @@ func TestSubscribePriceStreaming_StopsOnContextCancel(t *testing.T) {
 	cfg.APIEndpoint = srv.URL
 	// This test talks to the local SSE server above, which doesn't check auth, so a placeholder
 	// key is enough. Set one explicitly so the test runs without a real key configured.
-	cfg.APIKey = "test-api-key"
+	cfg.APIKey = httpclient.NewSecretWrapper("test-api-key")
 	pythClient, err := hermes.NewClient(&cfg, slog.Default())
 	assert.NoError(t, err)
 

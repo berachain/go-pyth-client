@@ -2,6 +2,7 @@ package benchmarks_test
 
 import (
 	"log/slog"
+	"os"
 	"testing"
 	"time"
 
@@ -20,7 +21,7 @@ var (
 
 	testConfig = benchmarks.Config{
 		APIEndpoint: "https://benchmarks.pyth.network",
-		APIKey:      httpclient.APIKey(),
+		APIKey:      httpclient.NewSecretWrapper(os.Getenv("PYTH_API_KEY")),
 		HTTPTimeout: 1 * time.Second,
 		MaxRetries:  2,
 	}
@@ -32,10 +33,9 @@ func setUp(tb testing.TB) *benchmarks.Client {
 	tb.Helper()
 
 	// These tests hit the real Benchmarks API, which requires a valid key. Skip them when no key
-	// is configured (e.g. local runs without PYTH_API_KEY_FILE / PYTH_API_KEY) rather than
-	// panicking.
-	if testConfig.APIKey == "" {
-		tb.Skip("no Pyth API key configured; set PYTH_API_KEY_FILE or PYTH_API_KEY to run this test")
+	// is configured (e.g. local runs without PYTH_API_KEY set) rather than panicking.
+	if testConfig.APIKey.Reveal() == "" {
+		tb.Skip("no Pyth API key configured; set PYTH_API_KEY to run this test")
 	}
 
 	pythClient, err := benchmarks.NewClient(&testConfig, slog.Default())

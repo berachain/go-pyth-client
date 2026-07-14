@@ -5,8 +5,6 @@ package httpclient
 import (
 	"net/http"
 	"net/url"
-	"os"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -14,31 +12,36 @@ import (
 	"github.com/berachain/go-pyth-client/types"
 )
 
-// BaseConfig holds the offchain HTTP parameters common to all Pyth API clients.
-type BaseConfig struct {
-	APIEndpoint string // Base URL of the API.
-	// #nosec G117
-	APIKey      string        // API key sent as `Authorization: Bearer <APIKey>`.
-	HTTPTimeout time.Duration // Timeout applied to each HTTP request.
-	MaxRetries  int           // Maximum number of retries per request.
+// SecretWrapper holds a sensitive value (such as an API key) so it is not
+// accidentally exported or logged. Its String method redacts the value, so the
+// only way to obtain the underlying secret is the explicit Reveal method.
+type SecretWrapper struct {
+	value string
 }
 
-// APIKey returns the Pyth API key, preferring the contents of the file whose
-// path is given by the PYTH_API_KEY_FILE env var. If that env var is unset or
-// the file cannot be read, it falls back to the PYTH_API_KEY env var.
-func APIKey() string {
-	if path := os.Getenv("PYTH_API_KEY_FILE"); path != "" {
-		root, err := os.OpenRoot(path)
-		if err == nil {
-			defer root.Close()
+// NewSecretWrapper wraps value in a SecretWrapper.
+func NewSecretWrapper(value string) SecretWrapper {
+	return SecretWrapper{value: value}
+}
 
-			if b, err := root.ReadFile("."); err == nil {
-				return strings.TrimSpace(string(b))
-			}
-		}
-	}
+// String implements fmt.Stringer, returning a redacted placeholder so the
+// secret is never emitted by fmt-based formatting or logging.
+func (sw SecretWrapper) String() string {
+	return "[REDACTED]"
+}
 
-	return os.Getenv("PYTH_API_KEY")
+// Reveal returns the underlying secret value. This is the only way to read it,
+// making every access to the raw secret explicit at the call site.
+func (sw SecretWrapper) Reveal() string {
+	return sw.value
+}
+
+// BaseConfig holds the offchain HTTP parameters common to all Pyth API clients.
+type BaseConfig struct {
+	APIEndpoint string        // Base URL of the API.
+	APIKey      SecretWrapper // API key sent as `Authorization: Bearer <APIKey>`.
+	HTTPTimeout time.Duration // Timeout applied to each HTTP request.
+	MaxRetries  int           // Maximum number of retries per request.
 }
 
 // Validate checks that the shared HTTP configuration is well formed. An API key
@@ -69,13 +72,13 @@ func New(cfg BaseConfig, logger retryablehttp.LeveledLogger) *http.Client {
 	httpClient.Logger = logger
 	httpClient.RetryMax = cfg.MaxRetries
 
-	if cfg.APIKey != "" {
+	if cfg.APIKey.Reveal() != "" {
 		base := httpClient.HTTPClient.Transport
 		if base == nil {
 			base = http.DefaultTransport
 		}
 
-		httpClient.HTTPClient.Transport = &authTransport{apiKey: cfg.APIKey, base: base}
+		httpClient.HTTPClient.Transport = &authTransport{apiKey: cfg.APIKey.Reveal(), base: base}
 	}
 
 	// Expose the retryable client as a standard *http.Client

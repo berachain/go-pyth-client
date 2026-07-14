@@ -2,10 +2,10 @@ package hermes_test
 
 import (
 	"context"
+	"log/slog"
+	"os"
 	"testing"
 	"time"
-
-	"log/slog"
 
 	"github.com/berachain/go-pyth-client/hermes"
 	"github.com/berachain/go-pyth-client/httpclient"
@@ -23,7 +23,7 @@ var testConfig = hermes.Config{
 	// Offchain parameters
 	BaseConfig: httpclient.BaseConfig{
 		APIEndpoint: "https://pyth.dourolabs.app/hermes",
-		APIKey:      httpclient.APIKey(),
+		APIKey:      httpclient.NewSecretWrapper(os.Getenv("PYTH_API_KEY")),
 		HTTPTimeout: 1 * time.Second,
 		MaxRetries:  2,
 	},
@@ -36,9 +36,9 @@ func setUp(tb testing.TB) (context.Context, *hermes.Client) {
 	tb.Helper()
 
 	// These tests hit the real Hermes API, which requires a valid key. Skip them when no key is
-	// configured (e.g. local runs without PYTH_API_KEY_FILE / PYTH_API_KEY) rather than panicking.
-	if testConfig.APIKey == "" {
-		tb.Skip("no Pyth API key configured; set PYTH_API_KEY_FILE or PYTH_API_KEY to run this test")
+	// configured (e.g. local runs without PYTH_API_KEY set) rather than panicking.
+	if testConfig.APIKey.Reveal() == "" {
+		tb.Skip("no Pyth API key configured; set PYTH_API_KEY to run this test")
 	}
 
 	// set up Pyth client and subscribe

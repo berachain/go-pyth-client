@@ -29,7 +29,7 @@ func NewClient(cfg *Config, logger retryablehttp.LeveledLogger) (*Client, error)
 		return nil, err
 	}
 	// Ensure an API key is provided.
-	if cfg.APIKey == "" {
+	if cfg.APIKey.Reveal() == "" {
 		return nil, types.ErrMissingAPIKey
 	}
 
