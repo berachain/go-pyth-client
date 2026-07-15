@@ -13,7 +13,7 @@ import (
 // feed keys (uses corresponding Pyth feed ID). Returns the Pyth PriceFeed struct and the price
 // feed update data for each pair.
 func (c *Client) GetLatestPriceUpdatesSync(
-	_ context.Context, priceFeedIDs []string,
+	ctx context.Context, priceFeedIDs []string,
 ) (map[string]*types.LatestPriceData, error) {
 	// Validate parameters.
 	if len(priceFeedIDs) == 0 {
@@ -21,10 +21,11 @@ func (c *Client) GetLatestPriceUpdatesSync(
 	}
 
 	// Build and fire the request.
-	resp, err := c.client.Get(c.buildBatchURLLatestPrice(priceFeedIDs))
+	resp, err := c.get(ctx, c.buildBatchURLLatestPrice(priceFeedIDs))
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	// Parse the response.
 	var priceResp latestPriceResponse
@@ -34,6 +35,7 @@ func (c *Client) GetLatestPriceUpdatesSync(
 
 	latestPriceData := make(map[string]*types.LatestPriceData, len(priceResp.Parsed))
 	err = c.resolveMany(&priceResp, latestPriceData)
+
 	return latestPriceData, err
 }
 
@@ -50,15 +52,16 @@ func (c *Client) GetLatestPriceUpdatesAsync(
 
 	// Initialize errgroup and results to run the requests in parallel.
 	var (
-		g, _    = errgroup.WithContext(ctx)
+		g, gctx = errgroup.WithContext(ctx)
 		results = sync.Map{}
 	)
 
 	// Fetch the price data results in parallel.
 	g.SetLimit(len(priceFeedIDs))
+
 	for _, priceFeedID := range priceFeedIDs {
 		g.Go(func() error {
-			lpd, err := c.fetchIndividualPriceData(priceFeedID)
+			lpd, err := c.fetchIndividualPriceData(gctx, priceFeedID)
 			if err != nil {
 				return err
 			}
@@ -82,22 +85,28 @@ func (c *Client) GetLatestPriceUpdatesAsync(
 			prices[priceFeedID] = lpd.(*types.LatestPriceData)
 		}
 	}
+
 	return prices, nil
 }
 
 // A task for fetching price for each feed ID with the `v2/updates/price/latest` endpoint.
-func (c *Client) fetchIndividualPriceData(feedID string) (*types.LatestPriceData, error) {
+func (c *Client) fetchIndividualPriceData(
+	ctx context.Context, feedID string,
+) (*types.LatestPriceData, error) {
 	// Build and fire the individual price request.
 	url := c.cfg.APIEndpoint + "/v2/updates/price/latest?ids[]=" + feedID
-	resp, err := c.client.Get(url)
+
+	resp, err := c.get(ctx, url)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	// Parse the response.
 	var priceResp latestPriceResponse
 	if err = json.NewDecoder(resp.Body).Decode(&priceResp); err != nil {
 		return nil, err
 	}
+
 	return c.resolveOne(&priceResp)
 }

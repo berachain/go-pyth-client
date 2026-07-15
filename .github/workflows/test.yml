@@ -3,21 +3,22 @@ name: test
 on:
   push:
     branches:
-    - main
+      - main
   pull_request:
 
 env:
   GOPATH: /home/runner/go
+  PYTH_API_KEY: ${{ secrets.PYTH_API_KEY }}
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
         with:
           cache: false
-          go-version: '1.22.6'
-      - uses: actions/checkout@v4
-      - uses: n8maninger/action-golang-test@v2
+          go-version: "1.25.12"
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - uses: n8maninger/action-golang-test@ef0e294645c281baf752f60bdfb68fc6c7f286cf
         with:
           args: "-timeout=30m"

@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetLatestPriceUpdatesSync(t *testing.T) {
-	ctx, pythClient := setUp()
+	ctx, pythClient := setUp(t)
 
 	prices, err := pythClient.GetLatestPriceUpdatesSync(ctx, testPairs)
 	assert.Nil(t, err)
@@ -21,7 +21,7 @@ func TestGetLatestPriceUpdatesSync(t *testing.T) {
 
 // To run this benchmark only without other tests: `go test -run=^$ -bench=BenchmarkGetLatestPriceUpdatesSync`
 func BenchmarkGetLatestPriceUpdatesSync(b *testing.B) {
-	ctx, benchmarkClient := setUp()
+	ctx, benchmarkClient := setUp(b)
 
 	for i := 0; i < b.N; i++ {
 		_, err := benchmarkClient.GetLatestPriceUpdatesSync(ctx, testPairs)

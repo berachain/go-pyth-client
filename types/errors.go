@@ -4,6 +4,9 @@ import "errors"
 
 // Config.
 var (
+	// ErrMissingAPIKey is returned when the API key is missing.
+	ErrMissingAPIKey = errors.New("api key is required")
+
 	// ErrInvalidHTTPTimeout is returned when the HTTP timeout is not greater than 0.
 	ErrInvalidHTTPTimeout = errors.New("http timeout must be greater than 0")
 

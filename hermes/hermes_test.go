@@ -2,11 +2,13 @@ package hermes_test
 
 import (
 	"context"
+	"log/slog"
+	"os"
+	"testing"
 	"time"
 
-	"log/slog"
-
 	"github.com/berachain/go-pyth-client/hermes"
+	"github.com/berachain/go-pyth-client/httpclient"
 )
 
 // This file contains test utils that are shared for tests of Hermes.
@@ -19,17 +21,31 @@ var testPairs = []string{
 
 var testConfig = hermes.Config{
 	// Offchain parameters
-	APIEndpoint: "https://hermes.pyth.network",
-	HTTPTimeout: 1 * time.Second,
-	MaxRetries:  2,
+	BaseConfig: httpclient.BaseConfig{
+		APIEndpoint: "https://pyth.dourolabs.app/hermes",
+		APIKey:      httpclient.NewSecretWrapper(os.Getenv("PYTH_API_KEY")),
+		HTTPTimeout: 1 * time.Second,
+		MaxRetries:  2,
+	},
 
 	// Onchain parameters
 	UseMock: true, // Uses the mock Pyth contract rather than the real one.
 }
 
-func setUp() (context.Context, *hermes.Client) {
+func setUp(tb testing.TB) (context.Context, *hermes.Client) {
+	tb.Helper()
+
+	// These tests hit the real Hermes API, which requires a valid key. Skip them when no key is
+	// configured (e.g. local runs without PYTH_API_KEY set) rather than panicking.
+	if testConfig.APIKey.Reveal() == "" {
+		tb.Skip("no Pyth API key configured; set PYTH_API_KEY to run this test")
+	}
+
 	// set up Pyth client and subscribe
-	pythClient, _ := hermes.NewClient(&testConfig, slog.Default())
+	pythClient, err := hermes.NewClient(&testConfig, slog.Default())
+	if err != nil {
+		tb.Fatalf("failed to create hermes client: %v", err)
+	}
 
 	return context.Background(), pythClient
 }

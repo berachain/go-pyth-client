@@ -2,9 +2,12 @@ package benchmarks_test
 
 import (
 	"log/slog"
+	"os"
+	"testing"
 	"time"
 
 	"github.com/berachain/go-pyth-client/benchmarks"
+	"github.com/berachain/go-pyth-client/httpclient"
 )
 
 // This file contains test utils that are shared for tests of Benchmarks.
@@ -18,6 +21,7 @@ var (
 
 	testConfig = benchmarks.Config{
 		APIEndpoint: "https://benchmarks.pyth.network",
+		APIKey:      httpclient.NewSecretWrapper(os.Getenv("PYTH_API_KEY")),
 		HTTPTimeout: 1 * time.Second,
 		MaxRetries:  2,
 	}
@@ -25,7 +29,19 @@ var (
 	testTime = time.Now().Add(-2 * time.Hour) // 2 hours ago
 )
 
-func setUp() *benchmarks.Client {
-	pythClient, _ := benchmarks.NewClient(&testConfig, slog.Default())
+func setUp(tb testing.TB) *benchmarks.Client {
+	tb.Helper()
+
+	// These tests hit the real Benchmarks API, which requires a valid key. Skip them when no key
+	// is configured (e.g. local runs without PYTH_API_KEY set) rather than panicking.
+	if testConfig.APIKey.Reveal() == "" {
+		tb.Skip("no Pyth API key configured; set PYTH_API_KEY to run this test")
+	}
+
+	pythClient, err := benchmarks.NewClient(&testConfig, slog.Default())
+	if err != nil {
+		tb.Fatalf("failed to create benchmarks client: %v", err)
+	}
+
 	return pythClient
 }

@@ -2,7 +2,7 @@ package benchmarks
 
 // JSON response returned from the `v1/updates/price/{timestamp}` endpoint.
 //
-//nolint:revive // needed for JSON unmarshalling.
+// revive:disable:nested-structs // needed for JSON unmarshalling.
 type priceResponse struct {
 	Parsed []struct {
 		ID       string `json:"id"`
@@ -10,6 +10,8 @@ type priceResponse struct {
 		EmaPrice price  `json:"ema_price"`
 	} `json:"parsed"`
 }
+
+// revive:enable:nested-structs
 
 // JSON formatted price returned from the `v1/updates/price/{timestamp}` endpoint.
 type price struct {

@@ -14,7 +14,7 @@ import (
 )
 
 func TestGetPriceUpdatesSync(t *testing.T) {
-	pythClient := setUp()
+	pythClient := setUp(t)
 
 	prices, err := pythClient.GetHistoricalPriceUpdatesSync(
 		context.Background(), testTime, testPairs,

@@ -1,6 +1,6 @@
 module github.com/berachain/go-pyth-client
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/cosmos/gosec/v2 v2.0.0-20230124142343-bf28a33fadf2
